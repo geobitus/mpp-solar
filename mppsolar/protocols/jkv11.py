@@ -113,8 +113,8 @@ NEW_COMMANDS = {
             ["discard", 2, "Unknown18", ""],
             ["discard", 2, "Unknown19", ""],
             ["discard", 2, "Unknown20", ""],
-            ["LittleHex2Short:r/1000", 2, "Current_Charge", "A"],  # Unknown21
-            ["LittleHex2Short:r/1000", 2, "Current_Discharge", "A"],  # Unknown22
+            ["BigHex2Short:r/5 -153.6", 2, "Current_Charge", "A"],  # Unknown21
+            ["BigHex2Short:r/5 *-1", 2, "Current_Discharge", "A"],  # Unknown22
             ["discard", 2, "Unknown23", ""],
             ["discard", 2, "Unknown24", ""],
             ["discard", 2, "Unknown25", ""],
