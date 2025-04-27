@@ -1,1 +1,136 @@
+-----------------------------------------usb_serial symlink
+scan for usb ports # ls /sys/bus/usb-serial/devices/ -ltrah
+https://superuser.com/questions/536478/how-to-lock-device-ids-to-port-addresses
+$ udevadm info /dev/ttyUSB0
+Ex: ID_PATH=pci-0000:00:1d.0-usb-0:1.2:1.0
+Ex: SUBSYSTEM=tty
+
+you can accordingly modify and write this udev rules:
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:1.1:1.0", SYMLINK+="ttyUSB11"
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:1.2:1.0", SYMLINK+="ttyUSB12"
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:1.3:1.0", SYMLINK+="ttyUSB13"
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.1-usb-0:1:1.0", SYMLINK+="ttyUSB14"
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.1-usb-0:2:1.0", SYMLINK+="ttyUSB15"
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:2:1.0", SYMLINK+="ttyUSB16"
+!!!Do not use the same names for symlinks as the kernel uses for device nodes!!!
+#~udevadm control --reload-rules && udevadm trigger
+
+for raspi5 if you use inverter hidraw ports add to /etc/udev/rules.d/99-com.rules:
+  (KERNEL=="hidraw*", SUBSYSTEM=="hidraw", MODE="0660", GROUP="plugdev")
+------------------------------------------hex crc convert
+https://www.rapidtables.com/convert/number/ascii-to-hex.html
+https://emn178.github.io/online-tools/crc/
+
+
+------------------------------------------install
+influxdb install:
+
+  #~wget -q https://repos.influxdata.com/influxdata-archive_compat.key
+  #~echo '393e8779c89ac8d958f81f942f9ad7fb82a25e133faddaf92e15b16e6ac9ce4c influxdata-archive_compat.key' | sha256sum -c && cat influxdata-archive_compat.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg > /dev/null
+  #~echo 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg] https://repos.influxdata.com/debian stable main' | sudo tee /etc/apt/sources.list.d/influxdata.list
+
+#~sudo apt update && sudo apt install -y influxdb
+
+#~sudo systemctl unmask influxdb.service
+#~sudo systemctl start influxdb
+#~sudo systemctl enable influxdb.service
+
+#~influx
+>create database mppsolar
+>use mppsolar
+>create user grafana with password 'grafana' with all privileges
+>grant all privileges on mppsolar to grafana
+>show users
+
+user admin
+---- -----
+grafana true
+
+-------------------------------------------------------------------------------------------------------------------------
+#~sudo mkdir -p /etc/apt/keyrings/
+#~cd /etc/apt/keyrings/
+#~wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+#~echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+#~sudo apt update && sudo apt install -y grafana
+#~sudo systemctl unmask grafana-server.service
+#~sudo systemctl start grafana-server
+#~sudo systemctl enable grafana-server.service
+-------------------------------------------------------------------------------------------------------------------------
+install mosquitto:
+#~sudo apt install -y mosquitto mosquitto-clients
+#~sudo systemctl enable mosquitto.service
+#~sudo systemctl start mosquitto.service
+------------------------------------------------------------------------------------------------------------------------
+install pip:
+#~sudo apt install python3-pip
+------------------------------------------------------------------------------------------------------------------------
+install mpp-solar:
+
+edit /etc/pip.conf and add 
+[global]
+break-system-packages = true
+
+#~sudo apt-get install libglib2.0-dev
+#~sudo pip install mppsolar
+------------------------------------------------------------------------------------------------------------------------
+install telegraf:
+#~sudo apt-get install telegraf
+
+    Configure Telegraf
+    Edit /etc/telegraf/telegraf.conf, find the line with [[outputs.influxdb]] and put a # at the start (i.e. comment out that line)
+    In an new file /etc/telegraf/telegraf.d/mqtt-input.conf add these lines:
+
+[[inputs.mqtt_consumer]]
+  servers = ["tcp://127.0.0.1:1883"]
+  topics = [
+    "mpp-solar/#",
+  ]
+  data_format = "influx"
+
+!!!!!note: the topic "#" will listen to all mqtt topics, you will likely want to be more specific
+
+    In a new file /etc/telegraf/telegraf.d/influx-output.conf add these lines
+
+[[outputs.influxdb]]
+  urls = ["http://127.0.0.1:8086"]
+  database = "mppsolar"
+  skip_database_creation = true
+  username = "grafana" 
+  password = "grafana"
+
+#~sudo systemctl unmask telegraf.service
+#~sudo systemctl start telegraf
+#~sudo systemctl enable telegraf.service
+
+
+
+----------------------------------------------------------------------------------------------------------------------------
+crontab -e
+* * * * * ( sleep 0 ; /usr/local/bin/mpp-solar -p /dev/hidraw0 -T INV2 -q localhost -c QPIGS -o influx2_mqtt > /home/geo/cron.out 2>&1 )
+* * * * * ( sleep 1 ; /usr/local/bin/mpp-solar -p /dev/hidraw1 -T INV1 -q localhost -c QPIGS -o influx2_mqtt > /home/geo/cron.out 2>&1 )
+* * * * * ( sleep 20 ; /usr/local/bin/mpp-solar -p /dev/hidraw0 -T INV2 -q localhost -c QPIGS -o influx2_mqtt > /home/geo/cron.out 2>&1 )
+* * * * * ( sleep 21 ; /usr/local/bin/mpp-solar -p /dev/hidraw1 -T INV1 -q localhost -c QPIGS -o influx2_mqtt > /home/geo/cron.out 2>&1 )
+* * * * * ( sleep 40 ; /usr/local/bin/mpp-solar -p /dev/hidraw0 -T INV2 -q localhost -c QPIGS -o influx2_mqtt > /home/geo/cron.out 2>&1 )
+* * * * * ( sleep 41 ; /usr/local/bin/mpp-solar -p /dev/hidraw1 -T INV1 -q localhost -c QPIGS -o influx2_mqtt > /home/geo/cron.out 2>&1 )
+----------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------backup
+#~influxd backup -database mppsolar /home/geo/bkp
+-----------------------------------------------restore
+#~sudo systemctl stop influxdb  (Service should not be running)
+#~sudo influxd restore -metadir /var/lib/influxdb/meta /home/geo/bkp
+#~sudo influxd restore -database mppsolar -datadir /var/lib/influxdb/data /home/geo/bkp
+#~sudo chown -R influxdb:influxdb /var/lib/influxdb/*
+#~sudo systemctl start influxdb
+
+----------------------------------------------grafanabkp
+export json on old machine
+import json on new machine and change uid accordingly
+
+----------------------------------------------play with
+https://raw.githubusercontent.com/PurpleAlien/jk-bms_grafana/refs/heads/main/data_bms_full.py
+https://gist.github.com/alferz/528b6027800aa89328d4663aff83efb4
+
+
+
+
 
