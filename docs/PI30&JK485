@@ -17,10 +17,6 @@ SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:2:1.0", SYMLINK+="tty
 
 for raspi5 if you use inverter hidraw ports add to /etc/udev/rules.d/99-com.rules:
   (KERNEL=="hidraw*", SUBSYSTEM=="hidraw", MODE="0660", GROUP="plugdev")
-------------------------------------------hex crc convert
-https://www.rapidtables.com/convert/number/ascii-to-hex.html
-https://emn178.github.io/online-tools/crc/
-
 
 ------------------------------------------install
 influxdb install:
@@ -130,6 +126,9 @@ import json on new machine and change uid accordingly
 https://raw.githubusercontent.com/PurpleAlien/jk-bms_grafana/refs/heads/main/data_bms_full.py
 https://gist.github.com/alferz/528b6027800aa89328d4663aff83efb4
 
+------------------------------------------hex crc convert
+https://www.rapidtables.com/convert/number/ascii-to-hex.html
+https://emn178.github.io/online-tools/crc/
 
 
 
