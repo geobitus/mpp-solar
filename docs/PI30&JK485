@@ -6,12 +6,12 @@ Ex: ID_PATH=pci-0000:00:1d.0-usb-0:1.2:1.0
 Ex: SUBSYSTEM=tty
 
 you can accordingly modify and write this udev rules:
-SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:1.1:1.0", SYMLINK+="ttyUSB11"
-SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:1.2:1.0", SYMLINK+="ttyUSB12"
-SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:1.3:1.0", SYMLINK+="ttyUSB13"
-SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.1-usb-0:1:1.0", SYMLINK+="ttyUSB14"
-SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.1-usb-0:2:1.0", SYMLINK+="ttyUSB15"
-SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:2:1.0", SYMLINK+="ttyUSB16"
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:1.1:1.0", SYMLINK+="ttyUSB11"      |
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:1.2:1.0", SYMLINK+="ttyUSB12"      |=> 3 serial dapters on a hub
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:1.3:1.0", SYMLINK+="ttyUSB13"      |
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.1-usb-0:1:1.0", SYMLINK+="ttyUSB14"      |
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.1-usb-0:2:1.0", SYMLINK+="ttyUSB15"      |=> 3 serial adapters directly on raspi ports
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:2:1.0", SYMLINK+="ttyUSB16"      |
 !!!Do not use the same names for symlinks as the kernel uses for device nodes!!!
 #~udevadm control --reload-rules && udevadm trigger
 
